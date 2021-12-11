@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.10)
+
+set(aoc_h_path ${CMAKE_SOURCE_DIR}/aoc.h)
+
+add_executable(aoc_2021_01 day_01.c)
+add_executable(aoc_2021_02 day_02.c)
+add_executable(aoc_2021_03 day_03.c)
+add_executable(aoc_2021_04 day_04.c)
+add_executable(aoc_2021_05 day_05.c ${aoc_h_path})
+add_executable(aoc_2021_06 day_06.c)
+add_executable(aoc_2021_07 day_07.c)
+add_executable(aoc_2021_08 day_08.c ${aoc_h_path})
+add_executable(aoc_2021_09 day_09.c ${aoc_h_path})
+add_executable(aoc_2021_10 day_10.c)
+add_executable(aoc_2021_11 day_11.c ${aoc_h_path})
