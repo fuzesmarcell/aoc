@@ -73,7 +73,15 @@ static bool is_small(const node_t *node) {
 	return (c >= 'a') && (c <= 'z');
 }
 
-static int64_t search_paths(node_t *node, search_stack_t *visited, search_stack_t *path) {
+typedef struct {
+	int count;
+	char paths[256][6];
+} path_storage_t;
+
+static int all_path_count;
+static path_storage_t all_paths[0xfffff];
+
+static int64_t search_paths(node_t *node, search_stack_t *visited, search_stack_t *path, node_t *special_node) {
 
 #define PUSH(stack, n) assert(stack->len + 1 < stack->cap); stack->nodes[stack->len++] = n;
 #define POP(stack) assert(stack->len - 1 >= 0); stack->nodes[stack->len - 1] = NULL; stack->len--;
@@ -82,19 +90,27 @@ static int64_t search_paths(node_t *node, search_stack_t *visited, search_stack_
 
 	if (node->type == END) {
 
-#if 0
+		assert(all_path_count + 1 < COUNT_OF(all_paths));
+		path_storage_t *storage = &all_paths[all_path_count++];
+
+		
 		for (int i = 0; i < path->len; i++) {
-			printf("%s,", path->nodes[i]->id);
+			// printf("%s,", path->nodes[i]->id);
+			strcpy(storage->paths[storage->count++], path->nodes[i]->id);
 		}
-		printf("end\n");
-#endif
+
+		strcpy(storage->paths[storage->count++], "end");
+
+		// printf("end\n");
+
 		return 1;
 	}
 
 	PUSH(path, node);
 
 	if (node->type == SMALL) {
-		PUSH(visited, node);
+		node->visit_count++;
+		assert(node->visit_count <= 2);
 	}
 
 	for (int i = 0; i < node->child_count; i++) {
@@ -103,12 +119,12 @@ static int64_t search_paths(node_t *node, search_stack_t *visited, search_stack_
 			continue;
 		}
 
-		bool was_visited = false;
-		for (int k = 0; k < visited->len; k++) {
-			if (child == visited->nodes[k]) {
-				was_visited = true;
-				break;
-			}
+		if (special_node == child && child->visit_count > 1) {
+			continue;
+		}
+		else if (special_node != child && child->visit_count > 0) {
+			assert(child->type == SMALL);
+			continue;
 		}
 
 		bool can_visit = true;
@@ -121,15 +137,20 @@ static int64_t search_paths(node_t *node, search_stack_t *visited, search_stack_
 					break;
 				}
 			}
+
+			if (!can_visit && special_node == node) {
+				can_visit = special_node->visit_count == 1;
+			}
 		}
 
-		if (!was_visited && can_visit) {
-			result += search_paths(child, visited, path);
+		if (can_visit) {
+			result += search_paths(child, visited, path, special_node);
 		}
 	}
 
 	if (node->type == SMALL) {
-		POP(visited);
+		node->visit_count--;
+		assert(node->visit_count >= 0);
 	}
 
 	POP(path);
@@ -147,7 +168,8 @@ int main(void) {
 	while (fgets(buffer, sizeof(buffer), stdin)) {
 		char id_a[100];
 		char id_b[100];
-		assert(sscanf(buffer, "%99[^-]-%99[^\n]\n", id_a, id_b) == 2);
+		int no_args_read = sscanf(buffer, "%99[^-]-%99[^\n]\n", id_a, id_b);
+		assert(no_args_read == 2);
 
 		node_t *a = get_or_create(id_a);
 		node_t *b = get_or_create(id_b);
@@ -178,8 +200,42 @@ int main(void) {
 		.len = 0,
 	};
 
-	int64_t result = search_paths(start, &stack, &path);
-	printf("Part 01: %lld", (long long int)result);
+	for (int i = 0; i < COUNT_OF(nodes); i++) {
+		node_t *node = &nodes[i];
+		if (node->type == SMALL) {
+			search_paths(start, &stack, &path, node);
+		}
+	}
+
+	for (int i = 0; i < all_path_count; i++) {
+		if (i % 500 == 0) {
+			printf("\r%.2f (%d / %d)", ((float)i / (float)all_path_count) * 100.f, i, all_path_count);
+			fflush(stdout);
+		}
+		
+		path_storage_t *a = &all_paths[i];
+		for (int k = 0; k < all_path_count; k++) {
+			if (i == k) { continue; }
+			path_storage_t *b = &all_paths[k];
+			if (a->count != b->count) {
+				continue;
+			}
+
+			size_t size_to_check = a->count * sizeof(6);
+			if (memcmp(a, b, sizeof(path_storage_t)) == 0) {
+				b->count = 0;
+			}
+		}
+	}
+
+	int64_t result = 0;
+	for (int i = 0; i < all_path_count; i++) {
+		if (all_paths[i].count > 0) {
+			result++;
+		}
+	}
+
+	printf("\nResult: %lld", (long long int)result);
 
 	return 0;
 }
