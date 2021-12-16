@@ -12,25 +12,76 @@
 
 #include <aoc.h>
 
-int main(void) {
-  u64 bits[0xff];
-  char buffer[2048];
+#define MAX_SIZE (4096 * 2)
 
-  if (!fgets(buffer, sizeof(buffer), stdin)) {
-    fprintf(stderr, "Error\n");
-    return -1;
+struct BitBuffer {
+  i32 buf_len;
+  u8 *buffer;
+
+  i32 offset;
+};
+
+
+static int get(BitBuffer *bits, i32 n) {
+  assert((bits->offset + n) < bits->buf_len);
+
+  int result = 0;
+  for (int i = 0; i < n; i++) {
+    int bit = bits->buffer[bits->offset + (n - 1 - i)];
+    result |= (bit << i);
   }
 
-  printf("%s\n", buffer);
-  
-  char *source = buffer;
-  u64 out = 0;
-  int len = sizeof(u64) * 2;
-  for (int i = 0; i < len; i++) {
-    char c = *source++;
-    if (c == '\0' || c == '\n') { 
-      break;
+  bits->offset += n;
+
+  return result;
+}
+
+static void parse_packet(BitBuffer *bits, bool cbb /* count by bits */, i32 cnt) {
+
+  i32 no_packets = 0;
+  i32 offset = bits->offset;
+
+  for (; cbb ? ((bits->offset - offset) < cnt) : (no_packets < cnt) ; no_packets++) {
+    i32 version = get(bits, 3);
+    i32 id = get(bits, 3);
+    switch (type_id) {
+      case 4 /* literal */: {
+        i64 value = 0;
+
+        while (1) {
+          i32 first_bit = get(&bits, 1);
+          i32 n = get(&bits, 4);
+          printf("n: %d\n", n);
+          value <<= 4;
+          value |= n;
+          if (first_bit == 0) { break; }
+        }
+
+        printf("value: %lld\n", (long long int)value);
+      } break;
+
+      default: /* operator */ {
+        i32 len_id = get(&bits, 1);
+        if (len_id == 0) {
+          int no_bits = get(&bits, 15);
+          parse_packet(bits, true, no_bits);
+        }
+        else (len_type_id == 1) {
+          int length = get(&bits, 11);
+          parse_packet(bits, false, length);
+        }
+      } break;
     }
+  }
+}
+
+int main(void) {
+
+  i32 cnt;
+  u8 buffer[MAX_SIZE];
+
+  for (char c; c = getchar(); ) {
+    if (c == '\n') { break; }
 
     int n = 0;
     if (c >= '0' && c <= '9') {
@@ -44,12 +95,24 @@ int main(void) {
       assert(false);
     }
 
-    out |= ((u64)n << ((len - 1) * i));
-
-    printf("%d\n", n);
+    for (int i = 0; i < 4; i++) {
+      buffer[cnt++] = (n & (1 << (3 - i))) == 0 ? 0 : 1;
+    }
   }
 
-  printf("%llu\n", (long long unsigned int)out);
-    
+  printf("Bits\n");
+  for (int i = 0; i < cnt; i++) {
+    printf("%d", buffer[i];
+  }
+  printf("\n");
+
+
+  // parse packets
+  BitBuffer bits = {};
+  bits.buffer = buffer;
+  bits.buf_len = cnt;
+
+  parse_packet(&bits, cnt);
+
   return 0;
 }

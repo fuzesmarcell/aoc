@@ -60,7 +60,7 @@ int flood_fill(node_t *grid, int w, int h, int x, int y, int n /* the value of t
 void print_grid(const node_t *grid, int w, int h) {
   for (int y = 0; y < h; y++) {
     for (int x = 0; x < w; x++) {
-      node_t *node = &grid[x + y * w];
+      const node_t *node = &grid[x + y * w];
       if (node->low_point) {
         printf(KBLU "%d" RESET, node->value);
       } else if (node->visited) {
