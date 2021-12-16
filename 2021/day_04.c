@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <assert.h>
 
+#include <aoc.h>
+
 typedef int32_t bool32;
 
 #define BOARD_WIDTH (5)
@@ -830,10 +832,10 @@ int main(void) {
 
 	int last_winning_board_score = 0;
 
-	for (int i = 0; i < __crt_countof(numbers); i++) {
+	for (int i = 0; i < COUNT_OF(numbers); i++) {
 		int n = numbers[i];
 
-		for (int board_idx = 0; board_idx < __crt_countof(boards); board_idx++) {
+		for (int board_idx = 0; board_idx < COUNT_OF(boards); board_idx++) {
 			board_t *board = &boards[board_idx];
 			if (board->won) {
 				continue;

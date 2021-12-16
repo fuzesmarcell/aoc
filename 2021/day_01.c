@@ -11,6 +11,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <aoc.h>
+
 int main(void) {
   int64_t numbers[] = {
       148,
@@ -2014,7 +2016,7 @@ int main(void) {
       5626,
       5625,
   };
-  int32_t no_numbers = __crt_countof(numbers);
+  int32_t no_numbers = COUNT_OF(numbers);
 
   int64_t prev = numbers[0] + numbers[1] + numbers[2];
   int32_t count = 0;

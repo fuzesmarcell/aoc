@@ -7,9 +7,11 @@
  * Date      2021.12.07
  */
 
-#include <math.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include <climits>
+#include <limits.h>
+
+#include <aoc.h>
 
 #define TEST_INPUT 0
 #if TEST_INPUT
@@ -20,7 +22,7 @@ static int n[] = {1101, 1, 29, 67, 1102, 0, 1, 65, 1008, 65, 35, 66, 1005, 66, 2
 
 int main(void) {
   int min = INT_MAX, max = INT_MIN;
-  for (int i = 0; i < __crt_countof(n); i++) {
+  for (int i = 0; i < COUNT_OF(n); i++) {
     if (n[i] > max) {
       max = n[i];
     }
@@ -32,7 +34,7 @@ int main(void) {
   int min_fuel = INT_MAX;
   for (int i = min; i <= max; i++) {
     int fuel = 0;
-    for (int k = 0; k < __crt_countof(n); k++) {
+    for (int k = 0; k < COUNT_OF(n); k++) {
       int len = abs(i - n[k]);
       for (int j = 1; j <= len; j++) {
         fuel += j;

@@ -116,7 +116,7 @@ int main(void) {
 		if (n > max) { max = n; }
 	}
 
-	printf("Result: %llu\n", max - min);
+	printf("Result: %llu\n", (long long unsigned int)(max - min));
 
 	return 0;
 }

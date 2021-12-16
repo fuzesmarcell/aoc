@@ -8,9 +8,11 @@
  */
 
 #include <stdio.h>
+#include <limits.h>
 
 #include <array>
 #include <unordered_set>
+#include <vector>
 
 #include "../aoc.h"
 
@@ -91,7 +93,7 @@ int main(void) {
 
 		uint64_t size = q.size();
 		if (size % 100 == 0) {
-			printf("\r%lld", size);
+			printf("\r%llu", (long long unsigned int)size);
 			fflush(stdout);
 		}
 
@@ -157,7 +159,7 @@ int main(void) {
 		score += grid[i];
 	}
 
-	printf("\n%lld\n", score);
+	printf("\n%lld\n", (long long int)score);
 
 #if 0
 	for (int y = 0; y < HEIGHT; y++) {

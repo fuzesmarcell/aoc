@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <aoc.h>
+
 typedef int32_t bool32;
 
 typedef struct {
@@ -1043,10 +1045,10 @@ bit_array_t create_bit_array(void) {
   bit_array_t arr = {
       .no_bits = 12,
       .mask = 0b111111111111,
-      .len = _countof(diagnostics),
-      .count = _countof(diagnostics)};
+      .len = COUNT_OF(diagnostics),
+      .count = COUNT_OF(diagnostics)};
 
-  assert(arr.len <= _countof(arr.entries));
+  assert(arr.len <= COUNT_OF(arr.entries));
 
   memcpy(arr.entries, diagnostics, sizeof(diagnostics));
 

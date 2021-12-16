@@ -206,7 +206,7 @@ int main(void) {
 		}
 	}
 
-	printf("%lld\n", paths.size());
+	printf("%lld\n", (long long int)paths.size());
 
 	return 0;
 }
