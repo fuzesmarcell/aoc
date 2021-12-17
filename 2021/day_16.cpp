@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <vector>
 #include <numeric>
+#include <functional>
 
 #include <aoc.h>
 
