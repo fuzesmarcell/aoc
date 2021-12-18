@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <vector>
+
 #ifdef _WIN32
 #include <Windows.h>
 #else
@@ -55,28 +57,19 @@ int main(int argc, char **args) {
   int miny = -10;
   int maxy = -5;
   
-  // Find all possible x values which might
-  // reach the target this should give us some n steps
-  // here we then can iterate with y values until we
-  // overshoot the target probably ?
-
-#if 0
+  std::vector<int> x_values;
   for (int x = maxx; x >= minx; x--) {
-    printf("x: %d\n");
     for (int i = 0; ; i++) {
       int n = seq(i);
-      printf("n: %d\n");
       if (n == x) {
-        printf("i: %d\n", i);
+        x_values.push_back(i);
       }
       else if (n > x) {
         break;
       }
     }
   }
-
-#endif
-
+  
   int max_height = -1000000;
 
   int steps = 0;
@@ -84,6 +77,7 @@ int main(int argc, char **args) {
     steps++;
     printf("\033[0;0H\033[2J");
 
+    
     px += vx;
     vx = MAX(0, vx - 1);
 
@@ -115,7 +109,11 @@ int main(int argc, char **args) {
         printf("\n");
       }
 
-    usleep(50000);
+    printf("Possible x values: [");
+    for (int x : x_values) {
+      printf("%d,", x);
+    }
+    printf("]\n");
 
     if (((px >= minx) && (px <= maxx)) && ((py <= maxy) && (py >= miny))) {
       printf("TARGET REACHED\n");
@@ -127,6 +125,8 @@ int main(int argc, char **args) {
     if (py < miny) {
       break;
     }
+
+    usleep(50000);
   }
 
   printf("Steps: %d, x = %d, y = %d\n", steps, px, py);

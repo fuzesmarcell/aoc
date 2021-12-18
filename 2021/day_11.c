@@ -28,7 +28,7 @@ struct
 	
 } octopuses;
 
-static synch_reference[N] = { 0 };
+static int synch_reference[N] = { 0 };
 
 static void flash(int x, int y, int inc) {
 	// Here I had a bounds check error but assan was not enabled.
