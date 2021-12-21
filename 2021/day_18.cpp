@@ -34,11 +34,12 @@ struct Pair {
   int values[2];
 };
 
-static void parse(const char **at, Pair *pair, Pair *parent) {
+static void parse(char **at, Pair *pair, Pair *parent) {
 #define NEXT (*(*at)++)
   // We assume the first opening bracket was parsed
   // already
   // [[[[[9,8],1],2],3],4]
+  ASSERT(**at != '[');
   pair->parent = parent;
   int i = 0;
   for (char c = NEXT; c != ']'; c = NEXT) {
@@ -100,20 +101,20 @@ static Pair *find_most_lr(Pair *start_node, int direction) {
   return nullptr;
 }
 
-static Pair *find_pair(Pair *self, int direction, int inc) {
+static void pair_increase(Pair *self, int direction, int inc) {
   // we need the previous node so we know the direction we came "from"
   Pair *prev = nullptr;
   for (Pair *node = self->parent; node; node = node->parent) {
     Pair *right = node->pairs[direction];
     if (right == nullptr) {
       node->values[direction] += inc;
-      return node;
+      return;
     }
 
     if (node->parent == nullptr) { // reached root node
       Pair *root = node;
       if (root->pairs[direction] == prev) {
-        return nullptr;
+        return;
       }
 
       // if the root value in the direction 
@@ -122,12 +123,12 @@ static Pair *find_pair(Pair *self, int direction, int inc) {
       int opposite = direction == LEFT ? RIGHT : LEFT;
       Pair *most_lr = find_most_lr(root->pairs[direction], opposite);
       most_lr->values[opposite] += inc;
-      return most_lr;
+      return;
     }
     prev = node;
   }
 
-  return nullptr;
+  return;
 }
 
 static void explode(Pair *pair) {
@@ -136,23 +137,16 @@ static void explode(Pair *pair) {
 
   Pair *parent = pair->parent;
 
-  Pair *left = find_pair(pair, LEFT, pair->values[LEFT]); 
-  Pair *right = find_pair(pair, RIGHT, pair->values[RIGHT]);
- 
-  if (left && left == parent) { // merge/explode
-    parent->values[RIGHT] = 0;
-    free(parent->pairs[RIGHT]);
-    parent->pairs[RIGHT] = nullptr;
-    ASSERT(parent->pairs[LEFT] == nullptr);
-  }
-  else if (right && right == parent) { // merge/explode
-    parent->values[LEFT] = 0;
-    free(parent->pairs[LEFT]);
-    parent->pairs[LEFT] = nullptr;
-    ASSERT(parent->pairs[RIGHT] == nullptr);
-  }
-  else {
-    ASSERT(false);
+  pair_increase(pair, LEFT, pair->values[LEFT]); 
+  pair_increase(pair, RIGHT, pair->values[RIGHT]);
+
+  for (int i = 0; i < 2; i++) {
+    if (parent->pairs[i] == pair) {
+      parent->values[i] = 0;
+      free(parent->pairs[i]);
+      parent->pairs[i] = nullptr;
+      break;
+    }
   }
 }
 
@@ -172,7 +166,7 @@ static void split(Pair *pair, int direction) {
 
 static Pair *g_root;
 
-static bool exec_action(Pair *pair, int depth) {
+static bool exec_explode(Pair *pair, int depth) {
   if (depth == 4) {
     explode(pair);
     printf("Explode: ");
@@ -183,7 +177,21 @@ static bool exec_action(Pair *pair, int depth) {
   for (int i = 0; i < 2; i++) {
     Pair *p = pair->pairs[i];
     if (p) {
-      if (exec_action(p, depth + 1)) {
+      if (exec_explode(p, depth + 1)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+static bool exec_split(Pair *pair) {
+  
+  for (int i = 0; i < 2; i++) {
+    Pair *p = pair->pairs[i];
+    if (p) {
+      if (exec_split(p)) {
         return true;
       }
     }
@@ -197,20 +205,54 @@ static bool exec_action(Pair *pair, int depth) {
     }
   }
   
-  // This path means we took no actions at all!
   return false;
 }
 
-int main(int argc, char **args) {
-  const char *text = argc == 2 ? args[1] : "[1,[2,3]]";
-  text++;
+static void exec_action(Pair *root) {
+  for (;;) {
+  }
+  while (exec_explode(root, 0)) {}
+  while (exec_split
+}
 
-  Pair root = { };
-  g_root = &root;
-  parse(&text, &root, nullptr);
-  print_pairs(&root, 0);
-  while (exec_action(&root, 0)) {}
-  print_pairs(&root, 0);
+static Pair *add_pairs(Pair *left, Pair *right) {
+  Pair *parent = (Pair *)calloc(1, sizeof(Pair));
+  parent->pairs[LEFT] = left;
+  parent->pairs[RIGHT] = right;
+  left->parent = parent;
+  right->parent = parent;
+
+  return parent;
+}
+
+static bool pair_from_line(Pair **pair) {
+  *pair = (Pair *)calloc(1, sizeof(Pair));
+  char b[0xff];
+  bool result = fgets(b, sizeof(b), stdin);
+  char *buf = b;
+  buf++;
+  parse(&buf, *pair, nullptr);
+
+  return result;
+}
+
+int main(int argc, char **args) {
+
+  Pair *left = nullptr;
+  bool parsed = pair_from_line(&left);
+  ASSERT(parsed);
+  Pair *right = nullptr;
+  while (pair_from_line(&right)) {
+    ASSERT(left && right);
+    Pair *root = add_pairs(left, right);
+    print_pairs(root, 0);
+    while (exec_action(root, 0)) {}
+    print_pairs(root, 0);
+    left = root;
+  }
+
+
+  // [[[[3,0],[5,3]],[4,4]], [5, 5]]
   
   return 0;
 }
