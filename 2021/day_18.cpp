@@ -8,251 +8,350 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <ctype.h>
 
 #include <vector>
 
 #include <aoc.h>
 
-#define ASSERT(expr) do { if (!(expr)) { printf("Assertion %s:%d -> %s\n", __FILE__, __LINE__, #expr); __builtin_debugtrap(); } }while(0);
+#define ASSERT(expr) do { if (!(expr)) { printf("Assertion %s:%d -> %s\n", __FILE__, __LINE__, #expr); __debugbreak(); } }while(0);
 
 enum {
-  LEFT = 0,
-  RIGHT = 1,
+	OPEN_BRACKET = 0xffffffff,
+	CLOSE_BRACKET = 0xfffffff,
 };
 
-static const char *dir_str[] = {
-  "LEFT",
-  "RIGHT",
-};
-
-struct Pair {
-  // NULL indicates root node
-  Pair *parent;
-  // if not NULL it is set otherwise
-  // the corresponding value applies
-  Pair *pairs[2];
-  int values[2];
-};
-
-static void parse(char **at, Pair *pair, Pair *parent) {
-#define NEXT (*(*at)++)
-  // We assume the first opening bracket was parsed
-  // already
-  // [[[[[9,8],1],2],3],4]
-  ASSERT(**at != '[');
-  pair->parent = parent;
-  int i = 0;
-  for (char c = NEXT; c != ']'; c = NEXT) {
-    switch (c) {
-      case '[': {
-        pair->pairs[i] = (Pair *)calloc(1, sizeof(Pair));
-        parse(at, pair->pairs[i++], pair);
-      } break;
-      case '0':
-      case '1':
-      case '2':
-      case '3':
-      case '4':
-      case '5':
-      case '6':
-      case '7':
-      case '8':
-      case '9': {
-        pair->values[i++] = c - '0';
-        if (i == 1) { // expect a comma
-          NEXT;
-        }
-      } break;
-    }
-  }
-#undef NEXT
+static bool is_number(int c) {
+	return (c != OPEN_BRACKET) && (c != CLOSE_BRACKET);
 }
 
-static void print_pairs(Pair *pair, int depth) {
-  printf("[");
-  for (int i = 0; i < 2; i++) {
-    Pair *p = pair->pairs[i];
-    if (p) {
-      print_pairs(p, depth + 1);
-    }
-    else {
-      printf("%d", pair->values[i]);
-    }
-    printf("%s", i == 0 ? "," : "");
-  }
+static void explode(std::vector<int>& numbers, int left_idx, int right_idx) {
+	for (int i = left_idx - 1; i >= 0; i--) {
+		int c = numbers[i];
+		if (is_number(c)) {
+			numbers[i] += numbers[left_idx + 1];
+			break;
+		}
+	}
 
-  printf("]");
-  if (depth == 0) {
-    printf("\n");
-  }
+	for (int i = right_idx + 1; i < numbers.size(); i++) {
+		int c = numbers[i];
+		if (is_number(c)) {
+			numbers[i] += numbers[right_idx - 1];
+			break;
+		}
+	}
+
+	numbers.insert(numbers.begin() + right_idx + 1, 0);
+	// remove the four elements of a pair [ n n ]
+	for (int i = 0; i < 4; i++) {
+		numbers.erase(numbers.begin() + left_idx);
+	}
 }
 
-static Pair *find_most_lr(Pair *start_node, int direction) {
-  for (Pair *node = start_node; node; node = node->pairs[direction]) {
-    if (node->pairs[direction] == nullptr) {
-      return node;
-    }
-  }
+static void split(std::vector<int>& numbers, int idx) {
+	float n = (float)numbers[idx] / 2.0f;
+	int a = (int)floorf(n);
+	int b = (int)ceilf(n);
 
-  // unreachable in theory
-  // as there must always be a literal value
-  // we can find!
-  ASSERT(false);
-  return nullptr;
+	numbers.erase(numbers.begin() + idx);
+	numbers.insert(numbers.begin() + idx, OPEN_BRACKET);
+	numbers.insert(numbers.begin() + idx + 1, a);
+	numbers.insert(numbers.begin() + idx + 2, b);
+	numbers.insert(numbers.begin() + idx + 3, CLOSE_BRACKET);
 }
 
-static void pair_increase(Pair *self, int direction, int inc) {
-  // we need the previous node so we know the direction we came "from"
-  Pair *prev = nullptr;
-  for (Pair *node = self->parent; node; node = node->parent) {
-    Pair *right = node->pairs[direction];
-    if (right == nullptr) {
-      node->values[direction] += inc;
-      return;
-    }
-
-    if (node->parent == nullptr) { // reached root node
-      Pair *root = node;
-      if (root->pairs[direction] == prev) {
-        return;
-      }
-
-      // if the root value in the direction 
-      // was NULL we would have found the value of it
-      ASSERT(root->pairs[direction]);
-      int opposite = direction == LEFT ? RIGHT : LEFT;
-      Pair *most_lr = find_most_lr(root->pairs[direction], opposite);
-      most_lr->values[opposite] += inc;
-      return;
-    }
-    prev = node;
-  }
-
-  return;
+static void print_numbers(std::vector<int>& numbers) {
+	int color_counter = 0;
+	for (int c : numbers) {
+		if (c == OPEN_BRACKET) {
+			printf("[");
+		}
+		else if (c == CLOSE_BRACKET) {
+			printf("]");
+		}
+		else {
+			if (color_counter % 2 == 0) {
+				printf(KRED "%d" RESET, c);
+			}
+			else {
+				printf(KBLU "%d" RESET, c);
+			}
+			color_counter++;
+		}
+	}
+	printf("\n");
 }
 
-static void explode(Pair *pair) {
-  // Exploding pairs must have both values be literal
-  ASSERT(pair->pairs[LEFT] == nullptr && pair->pairs[RIGHT] == nullptr);
+static void read_into_vec(const char* input, std::vector<int>& numbers, bool sourround = false) {
+	for (const char* at = input; *at; at++) {
+		char c = *at;
+		if (c == ',') { continue; }
+		if (isdigit(c)) {
+			numbers.push_back(c - '0');
+		}
+		else {
+			ASSERT(c == '[' || c == ']');
+			numbers.push_back(c == '[' ? OPEN_BRACKET : CLOSE_BRACKET);
+		}
+	}
 
-  Pair *parent = pair->parent;
-
-  pair_increase(pair, LEFT, pair->values[LEFT]); 
-  pair_increase(pair, RIGHT, pair->values[RIGHT]);
-
-  for (int i = 0; i < 2; i++) {
-    if (parent->pairs[i] == pair) {
-      parent->values[i] = 0;
-      free(parent->pairs[i]);
-      parent->pairs[i] = nullptr;
-      break;
-    }
-  }
+	if (sourround) {
+		numbers.insert(numbers.begin(), OPEN_BRACKET);
+		numbers.insert(numbers.end(), CLOSE_BRACKET);
+	}
 }
 
-static void split(Pair *pair, int direction) {
-  ASSERT(pair->pairs[direction] == nullptr);
+static void reduce(std::vector<int>& numbers) {
+	for (;;) {
+	start_actions:
+		bool found_stuff_to_explode = false;
+		int depth = 0;
+		for (int i = 0; i < numbers.size(); i++) {
+			int c = numbers[i];
+			if (c == OPEN_BRACKET) {
+				if (depth == 4) { // explode
+					explode(numbers, i, i + 3);
+					found_stuff_to_explode = true;
+					break;
+				}
+				depth++;
+			}
+			else if (c == CLOSE_BRACKET) {
+				depth--;
+			}
+		}
 
-  float n = (float)pair->values[direction] / 2.0f;
-  int a = (int)floorf(n);
-  int b = (int)ceilf(n);
+		if (found_stuff_to_explode) {
+			goto start_actions;
+		}
 
-  pair->values[direction] = 0;
-  pair->pairs[direction] = (Pair *)calloc(1, sizeof(Pair)); 
-  pair->pairs[direction]->values[LEFT] = a;
-  pair->pairs[direction]->values[RIGHT] = b;
-  pair->pairs[direction]->parent = pair;
+		bool found_stuff_to_split = false;
+		for (int i = 0; i < numbers.size(); i++) {
+			int c = numbers[i];
+			if (is_number(c) && c >= 10) {
+				split(numbers, i);
+				found_stuff_to_split = true;
+				break;
+			}
+		}
+
+		// we are done nothing to explode nor split
+		if (!found_stuff_to_split) {
+			break;
+		}
+	}
 }
 
-static Pair *g_root;
+static int get_magnitude(std::vector<int>& numbers) {
+	// calculate magnitude
+	int deepest = INT_MIN;
+	int depth = 0;
+	for (int c : numbers) {
+		if (c == OPEN_BRACKET) {
+			if (depth > deepest) {
+				deepest = depth;
+			}
+			depth++;
+		}
+		else if (c == CLOSE_BRACKET) {
+			depth--;
+		}
+	}
 
-static bool exec_explode(Pair *pair, int depth) {
-  if (depth == 4) {
-    explode(pair);
-    printf("Explode: ");
-    print_pairs(g_root, 0);
-    return true;
-  }
+	for (int i = deepest; i >= 0; i--) {
+		int d = 0;
+		for (int j = 0; j < numbers.size(); j++) {
+			int c = numbers[j];
+			if (c == OPEN_BRACKET) {
+				if (d == i) {
+					int a = numbers[j + 1];
+					ASSERT(a != OPEN_BRACKET && a != CLOSE_BRACKET);
 
-  for (int i = 0; i < 2; i++) {
-    Pair *p = pair->pairs[i];
-    if (p) {
-      if (exec_explode(p, depth + 1)) {
-        return true;
-      }
-    }
-  }
+					int b = numbers[j + 2];
+					ASSERT(b != OPEN_BRACKET && b != CLOSE_BRACKET);
 
-  return false;
+					int c = a * 3 + b * 2;
+
+					numbers.insert(numbers.begin() + j + 4, c);
+					// remove the four elements of a pair [ n n ]
+					for (int i = 0; i < 4; i++) {
+						numbers.erase(numbers.begin() + j);
+					}
+
+					//print_numbers(numbers);
+				}
+				else {
+					d++;
+				}
+			}
+			else if (c == CLOSE_BRACKET) {
+				d--;
+			}
+		}
+	}
+
+	ASSERT(numbers.size() == 1);
+	return numbers[0];
 }
 
-static bool exec_split(Pair *pair) {
-  
-  for (int i = 0; i < 2; i++) {
-    Pair *p = pair->pairs[i];
-    if (p) {
-      if (exec_split(p)) {
-        return true;
-      }
-    }
-    else {
-      if (pair->values[i] >= 10) {
-        split(pair, i);
-        printf("Split: ");
-        print_pairs(g_root, 0);
-        return true;
-      }
-    }
-  }
-  
-  return false;
-}
+int main(void) {
+#if 1
+	const char* input[] = {
+		"[[6,[[9,4],[5,5]]],[[[0,7],[7,8]],[7,0]]]",
+		"[[[[2,1],[8,6]],[2,[4,0]]],[9,[4,[0,6]]]]",
+		"[[[[4,2],[7,7]],4],[3,5]]",
+		"[8,[3,[[2,3],5]]]",
+		"[[[[0,0],[4,7]],[[5,5],[8,5]]],[8,0]]",
+		"[[[[5,2],[5,7]],[1,[5,3]]],[[4,[8,4]],2]]",
+		"[[5,[[2,8],[9,3]]],[[7,[5,2]],[[9,0],[5,2]]]]",
+		"[[9,[[4,3],1]],[[[9,0],[5,8]],[[2,6],1]]]",
+		"[[0,6],[6,[[6,4],[7,0]]]]",
+		"[[[9,[4,2]],[[6,0],[8,9]]],[[0,4],[3,[6,8]]]]",
+		"[[[[3,2],0],[[9,6],[3,1]]],[[[3,6],[7,6]],[2,[6,4]]]]",
+		"[5,[[[1,6],[7,8]],[[6,1],[3,0]]]]",
+		"[2,[[6,[7,6]],[[8,6],3]]]",
+		"[[[[0,9],1],[2,3]],[[[7,9],1],7]]",
+		"[[[[1,8],3],[[8,8],[0,8]]],[[2,1],[8,0]]]",
+		"[[2,9],[[5,1],[[9,3],[4,0]]]]",
+		"[9,[8,4]]",
+		"[[[3,3],[[6,2],8]],5]",
+		"[[[9,[4,8]],[[1,3],[6,7]]],[9,[[4,4],2]]]",
+		"[[[[1,3],6],[[5,6],[1,9]]],[9,[[0,2],9]]]",
+		"[7,[[[0,6],[1,2]],4]]",
+		"[[[[5,0],[8,7]],[[7,3],0]],[[6,7],[0,1]]]",
+		"[[[[5,4],7],[[8,2],1]],[[[7,0],[6,9]],0]]",
+		"[[[3,[5,6]],[[9,5],4]],[[[9,4],[8,1]],[5,[7,4]]]]",
+		"[[[3,[7,5]],[[8,1],8]],[[[6,3],[9,2]],[[5,7],7]]]",
+		"[8,[[2,0],[[2,6],8]]]",
+		"[[[[5,8],9],1],[9,6]]",
+		"[[[9,9],[8,8]],[[[3,5],[8,0]],[[4,6],[3,2]]]]",
+		"[[5,[[5,1],6]],[[5,8],9]]",
+		"[[7,[[1,6],6]],[[[8,6],7],[6,6]]]",
+		"[[0,[[9,5],0]],[4,[[7,9],[4,9]]]]",
+		"[[[[4,3],[3,5]],[[1,9],[7,6]]],[3,[[6,4],[6,0]]]]",
+		"[[[2,6],6],[6,3]]",
+		"[[[[1,5],[3,7]],0],[3,7]]",
+		"[4,[[[5,5],4],[[5,5],[9,3]]]]",
+		"[[3,[8,6]],[8,[7,7]]]",
+		"[8,[9,5]]",
+		"[[[6,3],[2,[3,6]]],[[[6,0],[0,2]],[[8,7],5]]]",
+		"[[[8,[1,2]],2],7]",
+		"[[[[8,4],[2,7]],[[3,9],7]],[[4,[8,8]],[[7,4],9]]]",
+		"[[[8,[2,5]],[3,[1,2]]],[[4,[5,0]],3]]",
+		"[[8,[0,3]],[[5,1],[1,1]]]",
+		"[[[8,[3,6]],6],[[7,[1,5]],[[4,8],9]]]",
+		"[[[5,0],[0,3]],[[2,[7,8]],[1,[4,8]]]]",
+		"[9,[4,[9,4]]]",
+		"[[[9,[0,4]],2],3]",
+		"[[9,[7,[8,9]]],3]",
+		"[[[8,6],[[3,5],[9,2]]],[[3,[9,7]],5]]",
+		"[[6,[[7,4],2]],[2,[7,[6,0]]]]",
+		"[1,[[[2,2],6],8]]",
+		"[[[6,[1,8]],[[9,3],[1,8]]],[[[8,2],[9,3]],[[8,2],[9,9]]]]",
+		"[[[[2,9],[1,7]],[[4,0],8]],[[8,9],[6,3]]]",
+		"[[[[2,4],[6,1]],[[5,4],[2,8]]],[8,[1,[2,4]]]]",
+		"[[[4,6],[1,6]],[3,[1,1]]]",
+		"[[[[8,3],8],8],[1,[[4,2],3]]]",
+		"[[[9,[8,7]],[5,9]],[8,[[5,6],[4,5]]]]",
+		"[[[[4,1],2],[[7,8],4]],[0,6]]",
+		"[[[9,7],[[8,6],[6,9]]],[[8,[8,4]],[[9,0],2]]]",
+		"[[[8,5],[1,9]],[[[2,4],5],6]]",
+		"[[[9,[9,3]],[9,[2,3]]],[7,7]]",
+		"[[[8,[7,4]],[2,6]],[[[4,5],[9,9]],[0,[5,2]]]]",
+		"[7,[2,2]]",
+		"[[[[1,8],[5,2]],3],[0,[2,[4,5]]]]",
+		"[[5,[[4,8],[5,5]]],[4,[[3,4],[6,0]]]]",
+		"[[3,1],[4,[3,[8,2]]]]",
+		"[[3,7],[3,[[6,1],[0,2]]]]",
+		"[[4,[6,2]],[[3,9],8]]",
+		"[[[[2,9],3],[[5,6],4]],[8,2]]",
+		"[[4,[[7,9],[4,9]]],[[4,3],[7,[0,7]]]]",
+		"[[[3,[8,9]],[[3,4],[9,5]]],3]",
+		"[0,[[[3,0],[8,7]],[[0,9],[9,1]]]]",
+		"[[[5,[9,9]],2],[4,8]]",
+		"[[[[4,4],4],5],[3,4]]",
+		"[[[3,[2,2]],7],[[3,2],0]]",
+		"[[[[0,5],[5,2]],2],[2,[[1,2],2]]]",
+		"[[[4,6],6],[[0,1],6]]",
+		"[2,[[[3,9],7],[[9,8],8]]]",
+		"[[7,9],[7,[[3,0],9]]]",
+		"[[[1,[6,2]],[0,8]],[[[7,2],4],9]]",
+		"[[[[4,7],[1,5]],[5,9]],[[2,[0,4]],[7,[7,0]]]]",
+		"[[1,[[2,0],[0,4]]],[[[4,6],9],[[6,8],[0,1]]]]",
+		"[[[[6,0],7],[7,[9,6]]],[[7,[4,9]],[9,4]]]",
+		"[[[5,[4,6]],[[1,9],[5,8]]],[[[3,6],[2,6]],[[7,3],7]]]",
+		"[[[6,0],[6,6]],[2,8]]",
+		"[[[4,[7,2]],[[5,6],[2,4]]],[[[6,8],5],[4,6]]]",
+		"[[[[9,0],9],[4,0]],[[[9,1],8],[6,4]]]",
+		"[[6,3],[1,[[5,0],[9,9]]]]",
+		"[[[2,7],[5,6]],[[6,[1,4]],[9,9]]]",
+		"[[[[0,5],3],[8,7]],[[[9,9],[6,2]],[0,7]]]",
+		"[[[5,6],[1,7]],[[[0,4],9],9]]",
+		"[[[7,3],3],[6,[0,[8,9]]]]",
+		"[[[0,6],[[8,5],[4,6]]],[[[2,7],[4,2]],[[8,7],[0,5]]]]",
+		"[[[8,[7,3]],1],8]",
+		"[[8,[8,[8,2]]],[[5,4],[1,[2,6]]]]",
+		"[[[[1,1],[8,6]],5],9]",
+		"[[[[2,4],[5,7]],[[5,8],[3,1]]],7]",
+		"[[4,[[0,1],9]],[[3,8],[4,2]]]",
+		"[3,2]",
+		"[[3,4],[8,[[6,5],[6,6]]]]",
+		"[[[[7,0],[3,8]],[[3,3],[2,6]]],[[8,0],9]]",
+	};
+#else
+	const char *input[] = {
+		"[[[0,[5,8]],[[1,7],[9,6]]],[[4,[1,2]],[[1,4],2]]]",
+		"[[[5,[2,8]],4],[5,[[9,9],0]]]",
+		"[6,[[[6,2],[5,6]],[[7,6],[4,7]]]]",
+		"[[[6,[0,7]],[0,9]],[4,[9,[9,0]]]]",
+		"[[[7,[6,4]],[3,[1,3]]],[[[5,5],1],9]]",
+		"[[6,[[7,3],[3,2]]],[[[3,8],[5,7]],4]]",
+		"[[[[5,4],[7,7]],8],[[8,3],8]]",
+		"[[9,3],[[9,9],[6,[4,9]]]]",
+		"[[2,[[7,7],7]],[[5,8],[[9,3],[0,2]]]]",
+		"[[[[5,2],5],[8,[3,7]]],[[5,[7,5]],[4,4]]]",
+	};
+#endif
 
-static void exec_action(Pair *root) {
-  for (;;) {
-  }
-  while (exec_explode(root, 0)) {}
-  while (exec_split
-}
+	std::vector<int> numbers;
+	read_into_vec(input[0], numbers);
+	for (int i = 1; i < COUNT_OF(input); i++) {
+		read_into_vec(input[i], numbers, true);
+		reduce(numbers);
+	}
 
-static Pair *add_pairs(Pair *left, Pair *right) {
-  Pair *parent = (Pair *)calloc(1, sizeof(Pair));
-  parent->pairs[LEFT] = left;
-  parent->pairs[RIGHT] = right;
-  left->parent = parent;
-  right->parent = parent;
+	print_numbers(numbers);
+	get_magnitude(numbers);
+	print_numbers(numbers);
 
-  return parent;
-}
+	int max = INT_MIN;
+	for (int i = 0; i < COUNT_OF(input); i++) {
+		printf("\r%d", i);
+		fflush(stdout);
+		for (int j = 0; j < COUNT_OF(input); j++) {
+			if (i == j) { continue; }
+			int additions[][2] = {
+				{i, j},
+				{j, i},
+			};
 
-static bool pair_from_line(Pair **pair) {
-  *pair = (Pair *)calloc(1, sizeof(Pair));
-  char b[0xff];
-  bool result = fgets(b, sizeof(b), stdin);
-  char *buf = b;
-  buf++;
-  parse(&buf, *pair, nullptr);
+			for (int k = 0; k < COUNT_OF(additions); k++) {
+				int indices[2] = { additions[k][0], additions[k][1] };
+				std::vector<int> n;
+				read_into_vec(input[indices[0]], n);
+				read_into_vec(input[indices[1]], n, true);
 
-  return result;
-}
+				reduce(n);
+				int res = get_magnitude(n);
+				if (res > max) {
+					max = res;
+				}
+			}
+		}
+	}
 
-int main(int argc, char **args) {
+	printf("\nLargest magnitude produced: %d\n", max);
 
-  Pair *left = nullptr;
-  bool parsed = pair_from_line(&left);
-  ASSERT(parsed);
-  Pair *right = nullptr;
-  while (pair_from_line(&right)) {
-    ASSERT(left && right);
-    Pair *root = add_pairs(left, right);
-    print_pairs(root, 0);
-    while (exec_action(root, 0)) {}
-    print_pairs(root, 0);
-    left = root;
-  }
-
-
-  // [[[[3,0],[5,3]],[4,4]], [5, 5]]
-  
-  return 0;
+	return 0;
 }
