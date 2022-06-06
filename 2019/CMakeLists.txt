@@ -34,11 +34,8 @@ target_link_libraries(${prefix}11 aoc_2019_lib intcode_lib)
 add_executable(${prefix}12 day_12.c)
 target_link_libraries(${prefix}12 aoc_2019_lib)
 
-if (MSVC)
-	add_executable(${prefix}13 day_13.c)
-	target_link_options(${prefix}13 PRIVATE "/SUBSYSTEM:WINDOWS")
-	target_link_libraries(${prefix}13 aoc_2019_lib intcode_lib)
-endif()
+add_executable(${prefix}13 day_13.c)
+target_link_libraries(${prefix}13 raylib intcode_lib)
 
 add_executable(${prefix}14 day_14.c)
 target_link_libraries(${prefix}14 aoc_2019_lib)

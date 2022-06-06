@@ -8,7 +8,7 @@ $Notice: (C) Copyright 2018 by Fuzes Marcell, All Rights Reserved. $
 ====================================================================
 */
 
-#include <windows.h>
+#include <raylib.h>
 
 #include "shared_advent.h"
 #include "intcode.h"
@@ -36,31 +36,13 @@ struct tile_entity
 
 #define TILE_MAP_WIDTH 50
 #define TILE_MAP_HEIGHT 20
-global tile_entity TileMap[TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
 global u32 GlobalScreenBitmap[TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
-
 global s64 IntCode[] = {2,380,379,385,1008,2399,519291,381,1005,381,12,99,109,2400,1102,0,1,383,1101,0,0,382,20101,0,382,1,20102,1,383,2,21101,37,0,0,1106,0,578,4,382,4,383,204,1,1001,382,1,382,1007,382,44,381,1005,381,22,1001,383,1,383,1007,383,20,381,1005,381,18,1006,385,69,99,104,-1,104,0,4,386,3,384,1007,384,0,381,1005,381,94,107,0,384,381,1005,381,108,1105,1,161,107,1,392,381,1006,381,161,1102,1,-1,384,1105,1,119,1007,392,42,381,1006,381,161,1102,1,1,384,20102,1,392,1,21102,18,1,2,21101,0,0,3,21102,138,1,0,1105,1,549,1,392,384,392,20102,1,392,1,21102,1,18,2,21101,3,0,3,21102,1,161,0,1105,1,549,1102,1,0,384,20001,388,390,1,20102,1,389,2,21102,180,1,0,1105,1,578,1206,1,213,1208,1,2,381,1006,381,205,20001,388,390,1,20102,1,389,2,21102,1,205,0,1106,0,393,1002,390,-1,390,1101,0,1,384,20101,0,388,1,20001,389,391,2,21101,0,228,0,1106,0,578,1206,1,261,1208,1,2,381,1006,381,253,21002,388,1,1,20001,389,391,2,21101,0,253,0,1105,1,393,1002,391,-1,391,1101,0,1,384,1005,384,161,20001,388,390,1,20001,389,391,2,21102,1,279,0,1105,1,578,1206,1,316,1208,1,2,381,1006,381,304,20001,388,390,1,20001,389,391,2,21101,304,0,0,1105,1,393,1002,390,-1,390,1002,391,-1,391,1102,1,1,384,1005,384,161,20101,0,388,1,21001,389,0,2,21101,0,0,3,21101,338,0,0,1106,0,549,1,388,390,388,1,389,391,389,21001,388,0,1,20102,1,389,2,21102,4,1,3,21102,1,365,0,1106,0,549,1007,389,19,381,1005,381,75,104,-1,104,0,104,0,99,0,1,0,0,0,0,0,0,193,20,15,1,1,22,109,3,22102,1,-2,1,22102,1,-1,2,21101,0,0,3,21102,414,1,0,1106,0,549,22101,0,-2,1,22102,1,-1,2,21101,429,0,0,1105,1,601,2101,0,1,435,1,386,0,386,104,-1,104,0,4,386,1001,387,-1,387,1005,387,451,99,109,-3,2106,0,0,109,8,22202,-7,-6,-3,22201,-3,-5,-3,21202,-4,64,-2,2207,-3,-2,381,1005,381,492,21202,-2,-1,-1,22201,-3,-1,-3,2207,-3,-2,381,1006,381,481,21202,-4,8,-2,2207,-3,-2,381,1005,381,518,21202,-2,-1,-1,22201,-3,-1,-3,2207,-3,-2,381,1006,381,507,2207,-3,-4,381,1005,381,540,21202,-4,-1,-1,22201,-3,-1,-3,2207,-3,-4,381,1006,381,529,21201,-3,0,-7,109,-8,2105,1,0,109,4,1202,-2,44,566,201,-3,566,566,101,639,566,566,1202,-1,1,0,204,-3,204,-2,204,-1,109,-4,2106,0,0,109,3,1202,-1,44,593,201,-2,593,593,101,639,593,593,21001,0,0,-2,109,-3,2105,1,0,109,3,22102,20,-2,1,22201,1,-1,1,21101,0,443,2,21101,0,386,3,21102,880,1,4,21101,0,630,0,1105,1,456,21201,1,1519,-2,109,-3,2106,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,2,0,2,0,0,0,0,0,0,2,0,0,2,0,2,0,2,0,0,2,2,2,2,2,0,2,2,2,2,0,2,2,2,2,0,0,0,0,0,0,1,1,0,0,2,2,0,2,0,0,0,2,2,0,0,2,0,2,2,2,0,0,0,0,0,0,0,2,0,0,0,2,0,0,0,0,2,0,2,2,2,0,0,0,1,1,0,0,0,2,2,0,2,2,0,0,0,2,0,2,2,0,0,0,0,2,0,0,0,0,0,0,0,2,2,0,0,2,2,0,2,0,0,2,0,0,0,0,1,1,0,2,0,0,2,2,2,2,0,2,2,0,2,0,0,2,2,0,0,2,2,2,2,0,2,0,0,0,0,0,0,0,0,0,0,2,0,2,0,0,0,0,1,1,0,2,2,0,0,2,0,0,0,0,2,0,2,0,0,2,0,2,2,0,2,2,0,0,2,0,0,0,0,0,0,2,2,2,2,0,0,0,2,0,0,0,1,1,0,2,2,2,2,0,0,2,0,2,0,0,2,2,0,0,0,0,0,0,2,2,0,2,0,0,0,0,0,0,0,2,2,2,0,0,2,2,2,0,0,0,1,1,0,2,0,2,0,0,0,0,0,0,2,0,2,0,2,2,2,2,0,2,0,2,2,0,2,2,0,2,2,0,0,2,0,0,2,0,0,0,0,0,2,0,1,1,0,0,0,2,0,0,0,2,2,0,0,2,2,0,0,2,0,2,0,0,2,0,2,0,0,0,2,0,0,0,0,0,2,2,2,0,0,2,2,0,2,0,1,1,0,0,0,2,0,0,2,0,2,0,2,2,2,2,0,2,0,2,0,0,0,0,0,0,2,2,0,0,2,0,2,0,0,0,2,2,2,2,0,0,0,0,1,1,0,0,0,0,0,0,2,0,2,0,0,2,2,0,2,0,0,0,2,2,0,0,0,2,0,0,2,0,2,2,0,0,0,0,0,0,0,2,2,2,2,0,1,1,0,0,2,2,0,2,0,2,0,2,0,0,2,0,0,2,2,2,2,0,0,2,0,2,2,2,0,2,2,2,0,0,2,0,0,2,2,2,0,2,0,0,1,1,0,2,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,2,0,0,2,0,0,0,0,0,0,2,0,2,0,0,0,0,2,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,70,58,29,33,6,46,59,57,27,46,31,1,33,3,13,87,13,93,53,58,97,48,1,76,24,32,17,5,56,47,11,8,83,35,15,60,92,90,87,4,31,29,46,91,13,80,65,89,30,23,63,61,93,96,92,10,69,8,19,57,49,29,51,31,43,12,63,55,20,34,69,73,75,10,58,42,38,18,22,72,53,78,47,96,40,39,19,93,44,60,61,23,31,30,78,67,66,37,1,29,42,78,40,90,55,82,27,33,82,51,81,76,89,34,17,52,83,19,79,62,77,75,36,72,97,20,22,63,69,90,10,51,82,88,16,82,8,2,72,93,70,87,97,85,81,55,93,33,7,40,54,37,58,41,41,93,97,8,16,3,98,73,37,40,98,69,92,56,15,1,8,13,35,27,75,96,50,62,42,63,16,10,86,74,65,69,6,95,57,48,86,46,4,34,2,61,40,18,96,6,55,60,81,62,45,42,15,25,1,85,20,5,5,84,41,63,19,40,89,9,37,67,68,83,37,10,31,28,98,7,81,64,9,87,29,30,42,54,66,54,66,35,94,85,78,29,38,34,37,12,54,39,94,63,46,77,75,53,71,10,63,94,9,66,1,8,19,10,41,16,85,57,55,24,5,95,27,62,39,95,56,30,48,33,78,45,67,48,46,14,10,81,12,62,5,63,12,20,52,63,46,43,8,18,36,37,38,20,57,45,86,82,7,35,95,89,71,9,50,23,42,74,54,40,31,89,75,10,9,20,16,41,89,4,26,5,65,37,91,87,78,3,36,56,34,45,97,87,52,60,80,7,12,92,23,21,28,73,76,71,7,23,92,53,56,33,24,35,60,22,56,36,94,1,36,85,16,38,62,56,50,93,77,26,65,42,65,41,97,84,96,70,56,71,61,58,97,71,37,93,46,21,74,90,87,9,69,3,38,78,81,63,79,4,9,13,20,28,88,1,10,68,57,64,43,62,38,69,50,71,38,23,14,24,35,52,16,95,47,66,6,7,34,35,15,41,4,81,56,72,83,13,69,67,46,17,52,56,69,86,39,36,98,48,65,98,73,6,62,73,17,3,35,40,27,61,69,6,55,38,63,27,5,7,16,40,96,63,70,10,26,3,91,61,94,61,6,60,13,37,65,21,52,28,57,76,52,32,5,77,64,54,12,73,82,50,72,17,33,88,97,86,71,96,24,36,89,84,15,80,11,4,51,44,67,58,62,21,4,38,69,64,26,36,88,35,70,49,24,34,59,65,31,81,35,23,90,56,63,80,49,48,95,59,3,67,53,46,69,45,11,64,64,71,56,79,29,83,43,79,82,76,47,85,65,49,12,45,81,80,98,84,47,4,90,73,85,40,17,44,61,47,66,58,7,45,32,82,45,16,97,30,96,77,39,66,28,47,32,35,77,85,18,14,95,40,89,69,19,95,18,85,74,42,30,80,87,15,57,25,38,39,68,35,5,73,34,3,43,61,72,23,26,81,86,15,1,36,43,65,42,70,16,78,70,72,81,43,20,76,34,73,63,6,42,87,6,66,86,87,69,45,54,11,40,38,17,79,36,85,76,69,9,79,80,67,26,49,85,54,12,63,34,89,12,86,33,63,50,91,18,41,64,98,88,15,83,88,95,22,68,92,59,68,20,82,44,51,11,26,22,87,41,20,76,56,54,58,75,30,65,89,70,30,93,89,28,92,70,12,80,38,59,48,90,30,5,76,5,91,34,67,88,87,77,27,3,82,35,49,27,68,43,21,40,7,62,26,2,48,9,38,95,87,94,93,58,45,48,96,65,17,33,62,45,74,24,93,88,29,93,20,19,48,11,80,88,31,61,30,69,14,3,95,48,4,33,82,38,24,33,88,48,87,67,48,22,34,49,94,78,10,71,9,19,74,74,10,39,28,4,2,96,12,40,26,12,3,10,90,62,37,61,32,86,81,98,45,56,59,47,50,48,86,1,42,96,27,22,40,51,95,23,14,26,17,4,30,17,52,519291};
+global s64 GlobalInput[1];
 
-global BITMAPINFO BitmapInfo;
+static void ClearWindow(u32 Color);
 
-internal void
-PaintWindow(HDC DeviceContext)
-{
-    u32 Cof = 25;
-    StretchDIBits(DeviceContext,
-                  0, 0,
-                  TILE_MAP_WIDTH * Cof, TILE_MAP_HEIGHT * Cof,
-                  0, 0,
-                  TILE_MAP_WIDTH, TILE_MAP_HEIGHT,
-                  GlobalScreenBitmap,
-                  &BitmapInfo,
-                  DIB_RGB_COLORS,
-                  SRCCOPY);
-}
-
-internal void
-ClearWindow(u32 Color)
-{
+void ClearWindow(u32 Color) {
     for(u32 Index = 0;
         Index < ArrayCount(GlobalScreenBitmap);
         ++Index)
@@ -69,189 +51,143 @@ ClearWindow(u32 Color)
     }
 }
 
-global s64 GlobalInput[1];
-
-LRESULT MainWindowCallback(
-HWND   Window,
-UINT   Message,
-WPARAM wParam,
-LPARAM lParam
-)
+int main(void)
 {
-    LRESULT Result = 0;
-    
-    switch(Message)
-    {
-        case WM_KEYDOWN:
-        case WM_KEYUP:
-        case WM_SYSKEYDOWN:
-        case WM_SYSKEYUP:
-        {
-            u32 VKCode = wParam;
-            b32 WasDown = ((lParam & (1 << 30)) != 0);
-            b32 IsDown = ((lParam & (1 << 31)) == 0);
-            
-            if(WasDown != IsDown)
-            {
-                if(VKCode == VK_LEFT)
-                {
-                    GlobalInput[0] = -1;
-                }
-                else if(VKCode == VK_RIGHT)
-                {
-                    GlobalInput[1] = 1;
-                }
-            }
-            
-        } break;
-        
-        default:
-        {
-            Result = DefWindowProc(Window, Message, wParam, lParam);
-        } break;
-    }
-    
-    return Result;
-}
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    const int screenWidth = 1280;
+    const int screenHeight = 720;
 
-int WinMain(
-HINSTANCE Instance,
-HINSTANCE PrevInstance,
-LPSTR     lpCmdLine,
-int       nShowCmd
-)
-{
-    WNDCLASSA WindowClass = {0};
-    WindowClass.style = CS_VREDRAW|CS_HREDRAW;
-    WindowClass.lpfnWndProc = MainWindowCallback;
-    WindowClass.hInstance = Instance;
-    WindowClass.lpszClassName = "MyWindow";
-    
-    if(RegisterClassA(&WindowClass))
+    context Context = InitContext(IntCode, sizeof(IntCode), sizeof(s64) * 1024);
+            
+    s32 PaddleX = 22;
+    s32 PaddleY = 1;
+    s32 BallX = 0;
+    s32 BallY = 0;
+    s64 Score = 0;
+
+    InitWindow(screenWidth, screenHeight, "Day 13");
+
+    SetTargetFPS(144);               // Set our game to run at 60 frames-per-second
+    //--------------------------------------------------------------------------------------
+
+    // Main game loop
+    b32 GlobalRunning = true;
+    while (!WindowShouldClose() || GlobalRunning)    // Detect window close button or ESC key
     {
-        HWND Window = CreateWindowExA(0, 
-                                      WindowClass.lpszClassName,
-                                      "aoc breakout",
-                                      WS_OVERLAPPEDWINDOW|WS_VISIBLE,
-                                      CW_USEDEFAULT, CW_USEDEFAULT,
-                                      CW_USEDEFAULT, CW_USEDEFAULT,
-                                      0, 0, Instance, 0);
-        if(Window)
+        // Update
+        //----------------------------------------------------------------------------------
+        if (IsKeyDown(KEY_LEFT)) { GlobalInput[0] = -1; }
+        if (IsKeyDown(KEY_RIGHT)) { GlobalInput[0] = 1; }
+
+        u32 RefreshRate = 32;
+        while(RefreshRate--)
         {
-            BitmapInfo.bmiHeader.biSize = sizeof(BitmapInfo.bmiHeader);
-            BitmapInfo.bmiHeader.biWidth = TILE_MAP_WIDTH;
-            BitmapInfo.bmiHeader.biHeight = TILE_MAP_HEIGHT;
-            BitmapInfo.bmiHeader.biPlanes = 1;
-            BitmapInfo.bmiHeader.biBitCount = 32;
-            BitmapInfo.bmiHeader.biCompression = BI_RGB;
+            intcode_result Result = RunIntCode(&Context, GlobalInput, 1, 3);
+            GlobalInput[0] = 0;
             
-            ClearWindow(COLOR_RGB(0, 0, 0));
-            
-            context Context = InitContext(IntCode, sizeof(IntCode), sizeof(s64) * 1024);
-            
-            s32 PaddleX = 22;
-            s32 PaddleY = 1;
-            s32 BallX = 0;
-            s32 BallY = 0;
-            
-            s64 Score = 0;
-            b32 GlobalRunning = true;
-            while(GlobalRunning)
+            switch(Result.Event)
             {
-                MSG Message;
-                while(PeekMessageA(&Message, Window, 0, 0, PM_REMOVE))
+                case Event_Type_Halt:
                 {
-                    TranslateMessage(&Message);
-                    DispatchMessage(&Message);
-                }
+                    GlobalRunning = false;
+                } break;
                 
-                u32 RefreshRate = 32;
-                while(RefreshRate--)
+                case Event_Type_Output:
                 {
-                    intcode_result Result = RunIntCode(&Context, GlobalInput, 1, 3);
-                    GlobalInput[0] = 0;
+                    Assert(Result.NumberOfOutputs == 3);
                     
-                    switch(Result.Event)
+                    s32 X = Result.Outputs[0];
+                    s32 Y = Result.Outputs[1];
+                    
+                    if(X == -1 &&
+                       Y == 0)
                     {
-                        case Event_Type_Halt:
-                        {
-                            GlobalRunning = false;
-                        } break;
+                        Score = Result.Outputs[2];
+                    }
+                    else
+                    {
+                        tile_type Type = Result.Outputs[2];
                         
-                        case Event_Type_Output:
+                        Assert(X >= 0);
+                        Assert(Y >= 0);
+                        Assert(X < TILE_MAP_WIDTH);
+                        Assert(Y < TILE_MAP_HEIGHT);
+                        
+                        // NOTE(fuzes): Our bitmap is top bottom so we have to transform our
+                        // coordinates accordingly
+                        Y = (TILE_MAP_HEIGHT - 1) - Y;
+                        
+                        if(Type == Tile_Type_Empty)
                         {
-                            Assert(Result.NumberOfOutputs == 3);
+                            GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(0, 0, 0);
+                        }
+                        else if(Type == Tile_Type_HorPadle)
+                        {
+                            GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(0, 0, 255);
+                            PaddleX = X;
+                            PaddleY = Y;
+                        }
+                        else if(Type == Tile_Type_Wall)
+                        {
+                            GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(125, 125, 125);
+                        }
+                        else if(Type == Tile_Type_Ball)
+                        {
+                            GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(200, 0, 0);
+                            BallX = X;
+                            BallY = Y;
                             
-                            s32 X = Result.Outputs[0];
-                            s32 Y = Result.Outputs[1];
-                            
-                            if(X == -1 &&
-                               Y == 0)
+                            if(BallX > PaddleX)
                             {
-                                Score = Result.Outputs[2];
+                                GlobalInput[0] = RIGHT;
+                            }
+                            else if(BallX < PaddleX)
+                            {
+                                GlobalInput[0] = LEFT;
                             }
                             else
                             {
-                                tile_type Type = Result.Outputs[2];
-                                
-                                Assert(X >= 0);
-                                Assert(Y >= 0);
-                                Assert(X < TILE_MAP_WIDTH);
-                                Assert(Y < TILE_MAP_HEIGHT);
-                                
-                                // NOTE(fuzes): Our bitmap is top bottom so we have to transform our
-                                // coordinates accordingly
-                                Y = (TILE_MAP_HEIGHT - 1) - Y;
-                                
-                                //TileMap[Y * TILE_MAP_WIDTH + X].Type = Type;
-                                if(Type == Tile_Type_Empty)
-                                {
-                                    GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(0, 0, 0);
-                                }
-                                else if(Type == Tile_Type_HorPadle)
-                                {
-                                    GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(0, 0, 255);
-                                    PaddleX = X;
-                                    PaddleY = Y;
-                                }
-                                else if(Type == Tile_Type_Wall)
-                                {
-                                    GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(125, 125, 125);
-                                }
-                                else if(Type == Tile_Type_Ball)
-                                {
-                                    GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(200, 0, 0);
-                                    BallX = X;
-                                    BallY = Y;
-                                    
-                                    if(BallX > PaddleX)
-                                    {
-                                        GlobalInput[0] = RIGHT;
-                                    }
-                                    else if(BallX < PaddleX)
-                                    {
-                                        GlobalInput[0] = LEFT;
-                                    }
-                                    else
-                                    {
-                                        GlobalInput[0] = NEUTRAL;
-                                    }
-                                }
-                                else
-                                {
-                                    GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(255, 255, 255);
-                                }
+                                GlobalInput[0] = NEUTRAL;
                             }
+                        }
+                        else
+                        {
+                            GlobalScreenBitmap[Y * TILE_MAP_WIDTH + X] = COLOR_RGB(255, 255, 255);
                         }
                     }
                 }
-                
-                HDC DeviceContext = GetDC(Window);
-                PaintWindow(DeviceContext);
-                Sleep(1);
             }
         }
+        // Draw
+        //----------------------------------------------------------------------------------
+        BeginDrawing();
+
+            ClearBackground(RAYWHITE);
+
+            for (int y = 0; y < TILE_MAP_HEIGHT; y++) {
+              for (int x = 0; x < TILE_MAP_HEIGHT; x++) {
+                int nx = x * 30;
+                int ny = y * 30;
+                u32 col = GlobalScreenBitmap[y * TILE_MAP_WIDTH + x];
+                Color color = {
+                  .r = (col >> 16) & 0xff,
+                  .g = (col >> 8) & 0xff,
+                  .b = col & 0xff,
+                  .a = 0xff,
+                };
+                DrawRectangle(nx, ny, 30, 30, color);
+              }
+            }
+
+        EndDrawing();
+        //----------------------------------------------------------------------------------
     }
-    
-    return(0);
+
+    // De-Initialization
+    //--------------------------------------------------------------------------------------
+    CloseWindow();        // Close window and OpenGL context
+    //--------------------------------------------------------------------------------------
+
+    return 0;
 }
