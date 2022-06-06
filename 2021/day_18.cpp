@@ -9,12 +9,17 @@
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
+#include <limits.h>
 
 #include <vector>
 
 #include <aoc.h>
 
+#ifdef WIN32
 #define ASSERT(expr) do { if (!(expr)) { printf("Assertion %s:%d -> %s\n", __FILE__, __LINE__, #expr); __debugbreak(); } }while(0);
+#else
+#define ASSERT(expr)
+#endif
 
 enum {
 	OPEN_BRACKET = 0xffffffff,

@@ -8,10 +8,31 @@ $Notice: (C) Copyright 2019 by Fuzes Marcell, All Rights Reserved. $
 ====================================================================
 */
 
-#include <windows.h>
-
 #include "shared_advent.h"
 #include "intcode.h"
+
+#ifdef WIN32
+#include <windows.h>
+#elif _POSIX_C_SOURCE >= 199309L
+#include <time.h>   // for nanosleep
+#else
+#include <unistd.h> // for usleep
+#endif
+
+void sleep_ms(int milliseconds){ // cross-platform sleep function
+#ifdef WIN32
+    Sleep(milliseconds);
+#elif _POSIX_C_SOURCE >= 199309L
+    struct timespec ts;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
+    nanosleep(&ts, NULL);
+#else
+    if (milliseconds >= 1000)
+      sleep(milliseconds / 1000);
+    usleep((milliseconds % 1000) * 1000);
+#endif
+}
 
 typedef enum move_command_type move_command_type;
 enum move_command_type
@@ -114,7 +135,7 @@ GetAreaFromRobot(context *Context, move_command_type MoveCommand)
 {
     area_type Result;
     s64 Input[1] = {MoveCommand};
-    intcode_result IntCodeResult = RunIntCode(&Context, Input, ArrayCount(Input), 1);
+    intcode_result IntCodeResult = RunIntCode(Context, Input, ArrayCount(Input), 1);
     Result = IntCodeResult.Outputs[0];
     
     return(Result);
@@ -305,9 +326,9 @@ int main(int ArgCount, char **Args)
             PrintTileMapArea(MinX, MinY, MaxX, MaxY, RobotX, RobotY);
             printf("--------------%d--------------\n", Tick);
             printf("\n\n");
-            Sleep(750);
+            sleep_ms(750);
         }
-        }
+    }
     
     return(0);
 }

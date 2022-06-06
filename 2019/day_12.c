@@ -206,9 +206,9 @@ int main()
     }
     
     printf("Total Energy in the system: %d\n", Energy);
-    printf("Period X: %lld\n", XPeriod);
-    printf("Period Y: %lld\n", YPeriod);
-    printf("Period Z: %lld\n", ZPeriod);
+    printf("Period X: %lld\n", (long long)XPeriod);
+    printf("Period Y: %lld\n", (long long)YPeriod);
+    printf("Period Z: %lld\n", (long long)ZPeriod);
     
     return(0);
 }
