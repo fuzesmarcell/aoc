@@ -5,7 +5,7 @@ add_library(aoc_2019_lib
   shared_advent.c
 )
 
-if (!MSVC)
+if (UNIX)
 	target_link_libraries(aoc_2019_lib m)
 endif()
 
