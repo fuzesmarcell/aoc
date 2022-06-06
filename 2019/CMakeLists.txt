@@ -5,7 +5,9 @@ add_library(aoc_2019_lib
   shared_advent.c
 )
 
-target_link_libraries(aoc_2019_lib m)
+if (!MSVC)
+	target_link_libraries(aoc_2019_lib m)
+endif()
 
 add_library(intcode_lib 
   intcode.h
@@ -32,9 +34,10 @@ target_link_libraries(${prefix}11 aoc_2019_lib intcode_lib)
 add_executable(${prefix}12 day_12.c)
 target_link_libraries(${prefix}12 aoc_2019_lib)
 
-# add_executable(${prefix}13 day_13.c)
 if (MSVC)
+	add_executable(${prefix}13 day_13.c)
 	target_link_options(${prefix}13 PRIVATE "/SUBSYSTEM:WINDOWS")
+	target_link_libraries(${prefix}13 aoc_2019_lib intcode_lib)
 endif()
 
 add_executable(${prefix}14 day_14.c)
