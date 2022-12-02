@@ -40,4 +40,14 @@ typedef int64_t i64;
 typedef int32_t bool32_t;
 typedef int32_t b32;
 
+#ifdef __cplusplus
+#include <vector>
+#include <string_view>
+#include <string>
+
+std::vector<std::string_view> split(std::string_view str, std::string_view delimiter);
+std::string read_entire_file(const std::string& str);
+int to_int(std::string_view str);
+#endif // __cplusplus
+
 #endif // AOC_H
