@@ -48,6 +48,12 @@ typedef int32_t b32;
 std::vector<std::string_view> split(std::string_view str, std::string_view delimiter);
 std::string read_entire_file(const std::string& str);
 int to_int(std::string_view str);
+
+template <class It, class T>
+inline bool inside(It it, T t) {
+	return std::find(it.begin(), it.end(), t) != it.end();
+}
+
 #endif // __cplusplus
 
 #endif // AOC_H
