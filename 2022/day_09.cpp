@@ -87,18 +87,9 @@ int main(int argc, char const *argv[])
 				assert(!(h->x == pos->x && h->y == pos->y)); // not eq
 
 				int2 offset = *h - *pos;
-				if (offset.x == 0 || offset.y == 0) {
-					assert(offset.x != 0 || offset.y != 0);
-					offset.x = offset.x == 0 ? 0 : sign(offset.x);
-					offset.y = offset.y == 0 ? 0 : sign(offset.y);
-					*pos += offset;
-				}
-				else { // diagonal
-					assert(offset.x != 0 && offset.y != 0);
-					offset.x = sign(offset.x);
-					offset.y = sign(offset.y);
-					*pos += offset;
-				}
+				offset.x = offset.x == 0 ? 0 : sign(offset.x);
+				offset.y = offset.y == 0 ? 0 : sign(offset.y);
+				*pos += offset;
 			}
 
 			// add to visited if it does not exist
