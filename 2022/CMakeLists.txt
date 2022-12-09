@@ -21,3 +21,6 @@ target_link_libraries(aoc_2022_07 PRIVATE aoc_lib)
 
 add_executable(aoc_2022_08 day_08.cpp)
 target_link_libraries(aoc_2022_08 PRIVATE aoc_lib)
+
+add_executable(aoc_2022_09 day_09.cpp)
+target_link_libraries(aoc_2022_09 PRIVATE aoc_lib)
