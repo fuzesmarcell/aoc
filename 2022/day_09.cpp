@@ -62,11 +62,12 @@ int main(int argc, char const *argv[])
 {
 	std::string content = read_entire_file("input.txt");
 
-	int2 head = {};
-	int2 tail = {};
+	int2 rope[10] = {};
+	int2* head = &rope[0];
+	int2* tail = &rope[_countof(rope)-1];
 
 	std::vector<int2> visited;
-	visited.push_back(tail);
+	visited.push_back(*tail);
 
 	for (auto const line : split(content, "\n")) {
 		char d; int n;
@@ -74,31 +75,36 @@ int main(int argc, char const *argv[])
 		assert(result == 2);
 
 		for (size_t i = 0; i < n; i++) {
-			head = move(d, head);
+			*head = move(d, *head);
 
-			bool touching = labs(head.x - tail.x) <= 1 &&
-				            labs(head.y - tail.y) <= 1;
-			if (touching) { continue; }
+			for (size_t j = 1; j < _countof(rope); j++) {
+				const int2* h = &rope[j - 1];
+				int2* pos = &rope[j];
 
-			assert(!(head.x == tail.x && head.y == tail.y)); // not eq
-			bool is_same_row_col = head.x == tail.x ||
-				                   head.y == tail.y;
-			if (is_same_row_col) {
-				tail = move(d, tail);
-			}
-			else { // diagonal move
-				int2 offset = head - tail;
-				assert(offset.x != 0 && offset.y != 0);
+				bool touching = labs(h->x - pos->x) <= 1 &&
+					labs(h->y - pos->y) <= 1;
+				if (touching) { break; }
+				assert(!(h->x == pos->x && h->y == pos->y)); // not eq
 
-				offset.x = sign(offset.x);
-				offset.y = sign(offset.y);
-				tail += offset;
+				int2 offset = *h - *pos;
+				if (offset.x == 0 || offset.y == 0) {
+					assert(offset.x != 0 || offset.y != 0);
+					offset.x = offset.x == 0 ? 0 : sign(offset.x);
+					offset.y = offset.y == 0 ? 0 : sign(offset.y);
+					*pos += offset;
+				}
+				else { // diagonal
+					assert(offset.x != 0 && offset.y != 0);
+					offset.x = sign(offset.x);
+					offset.y = sign(offset.y);
+					*pos += offset;
+				}
 			}
 
 			// add to visited if it does not exist
-			bool inside = std::any_of(visited.begin(), visited.end(), [tail](int2 p) { return tail.x == p.x && tail.y == p.y;});
+			bool inside = std::any_of(visited.begin(), visited.end(), [tail](int2 p) { return tail->x == p.x && tail->y == p.y;});
 			if (!inside) {
-				visited.push_back(tail);
+				visited.push_back(*tail);
 			}
 		}
 	}
