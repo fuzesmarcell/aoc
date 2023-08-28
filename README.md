@@ -5,7 +5,7 @@ Advent of code solutions written in C/C++
 ``` bash
 git clone git@github.com:fuzesmarcell/aoc_2021.git
 cd aoc
-mkdir build
+mkdir build && cd build
 cmake ..
 cmake --build .
 ```
