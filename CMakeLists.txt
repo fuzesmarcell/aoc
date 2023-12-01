@@ -14,6 +14,7 @@ add_library(aoc_lib STATIC "aoc.cpp" aoc.h "2022/day_01.cpp")
 
 add_subdirectory(third_party)
 
+add_subdirectory(2017)
 add_subdirectory(2019)
 add_subdirectory(2020)
 add_subdirectory(2021)
