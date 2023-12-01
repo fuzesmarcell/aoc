@@ -4,6 +4,8 @@
 
 #include <aoc.h>
 
+#define countof(arr) (sizeof(arr)/sizeof((arr)[0]))
+
 struct int2 {
 	int x, y;
 };
@@ -34,23 +36,28 @@ int sign(int v) {
 int2 move(char move, int2 pos) {
 	switch (move) { // move head
 
-	case 'R': {
+	case 'R':
+	{
 		pos.x += 1;
 	} break;
 
-	case 'L': {
+	case 'L':
+	{
 		pos.x -= 1;
 	} break;
 
-	case 'U': {
+	case 'U':
+	{
 		pos.y += 1;
 	} break;
 
-	case 'D': {
+	case 'D':
+	{
 		pos.y -= 1;
 	} break;
 
-	default: {
+	default:
+	{
 		assert(!"invalid_default_case");
 	} break;
 	}
@@ -58,13 +65,12 @@ int2 move(char move, int2 pos) {
 	return pos;
 }
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const* argv[]) {
 	std::string content = read_entire_file("input.txt");
 
 	int2 rope[10] = {};
 	int2* head = &rope[0];
-	int2* tail = &rope[_countof(rope)-1];
+	int2* tail = &rope[countof(rope)-1];
 
 	std::vector<int2> visited;
 	visited.push_back(*tail);
@@ -77,7 +83,7 @@ int main(int argc, char const *argv[])
 		for (size_t i = 0; i < n; i++) {
 			*head = move(d, *head);
 
-			for (size_t j = 1; j < _countof(rope); j++) {
+			for (size_t j = 1; j < countof(rope); j++) {
 				const int2* h = &rope[j - 1];
 				int2* pos = &rope[j];
 
@@ -93,7 +99,7 @@ int main(int argc, char const *argv[])
 			}
 
 			// add to visited if it does not exist
-			bool inside = std::any_of(visited.begin(), visited.end(), [tail](int2 p) { return tail->x == p.x && tail->y == p.y;});
+			bool inside = std::any_of(visited.begin(), visited.end(), [tail](int2 p) { return tail->x == p.x && tail->y == p.y; });
 			if (!inside) {
 				visited.push_back(*tail);
 			}
