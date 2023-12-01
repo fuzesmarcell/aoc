@@ -2,28 +2,30 @@
 #include <ctype.h>
 #include <string.h>
 #include <limits.h>
+#include <stddef.h>
 
-char* digits[][2] = {
-	{"one","eno"},
-	{"two","owt"},
-	{"three","eerht"},
-	{"four","ruof"},
-	{"five","evif"},
-	{"six","xis"},
-	{"seven","neves"},
-	{"eight","thgie"},
-	{"nine","enin"},
+static char* digits[][2] = {
+	{"one", "eno"},
+	{"two", "owt"},
+	{"three", "eerht"},
+	{"four", "ruof"},
+	{"five", "evif"},
+	{"six", "xis"},
+	{"seven", "neves"},
+	{"eight", "thgie"},
+	{"nine", "enin"},
 };
 
 static int find(const char* str, int idx, int b);
+static inline char* str_rev(char* str);
 
 int main() {
 	size_t result = 0;
 	char buffer[512];
 	char* line;
-	while (line = gets_s(buffer, sizeof(buffer)), line != NULL) {
+	while (line = fgets(buffer, sizeof(buffer), stdin), line != NULL) {
 		result += find(line, 0, 10);
-		_strrev(line);
+		str_rev(line);
 		result += find(line, 1, 1);
 	}
 
@@ -56,4 +58,19 @@ int find(const char* str, int idx, int b) {
 	}
 
 	return (ptrdiff_t)min0 < min1 ? n[0] : n[1];
+}
+
+char* str_rev(char* str) {
+	if (str == NULL)
+		return NULL;
+
+	size_t len = strlen(str);
+	for (size_t i = 0; i < len/2; i++) {
+		size_t j = len-i-1;
+		char tmp = str[i];
+		str[i] = str[j];
+		str[j] = tmp;
+	}
+
+	return str;
 }
