@@ -1,0 +1,1 @@
+add_executable(aoc_2023_01 day_01.c)
