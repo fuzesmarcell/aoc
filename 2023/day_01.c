@@ -61,9 +61,6 @@ int find(const char* str, int idx, int b) {
 }
 
 char* str_rev(char* str) {
-	if (str == NULL)
-		return NULL;
-
 	size_t len = strlen(str);
 	for (size_t i = 0; i < len/2; i++) {
 		size_t j = len-i-1;
