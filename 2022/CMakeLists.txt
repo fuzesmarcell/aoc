@@ -30,3 +30,5 @@ target_link_libraries(aoc_2022_10 PRIVATE aoc_lib)
 
 add_executable(aoc_2022_11 day_11.cpp)
 target_link_libraries(aoc_2022_11 PRIVATE aoc_lib)
+
+add_executable(aoc_2022_12 day_12.c)
