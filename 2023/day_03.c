@@ -23,6 +23,9 @@ static int part_to_number(PartNumber* part);
 static inline bool is_symbol(int x, int y);
 static inline bool has_adjacent_symbol(int x, int y);
 
+static int lookup_part(int x, int y);
+static int find_gear_ratio(int x, int y);
+
 int main() {
 
 	char buffer[512];
@@ -66,6 +69,15 @@ int main() {
 				result += number;
 				break;
 			}
+		}
+	}
+
+	size_t result1 = 0;
+	for (int y = 0; y < ny; y++) {
+		for (int x = 0; x < nx; x++) {
+			char c = schematic[y][x];
+			if (c == '*')
+				result1 += find_gear_ratio(x, y);
 		}
 	}
 
@@ -116,4 +128,67 @@ bool has_adjacent_symbol(int x, int y) {
 	if (is_symbol(x - 1, y + 1)) return true;
 
 	return false;
+}
+
+int lookup_part(int x, int y) {
+	for (int i = 0; i < nparts; i++) {
+		PartNumber* part = &parts[i];
+		for (int j = 0; j < part->ndigits; j++) {
+			int py = part->positions[j][0];
+			int px = part->positions[j][1];
+
+			if (x == px && y == py) {
+				return i;
+			}
+		}
+	}
+
+	return -1;
+}
+
+static bool has_id(int* ids, int len, int id) {
+	for (int i = 0; i < len; i++) {
+		if (ids[i] == id) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int find_gear_ratio(int x, int y) {
+	int npart_ids = 0;
+	int part_ids[8] = { 0 };
+
+	int offsets[8][2] = {
+		{ 1,  0},
+		{-1,  0},
+
+		{ 0,  1},
+		{ 0, -1},
+
+		{ 1,  1},
+		{-1, -1},
+
+		{ 1, -1},
+		{-1,  1},
+	};
+
+	for (int i = 0; i < 8; i++) {
+		int xo = offsets[i][0];
+		int yo = offsets[i][1];
+
+		int id;
+		if (id = lookup_part(x + xo, y + yo), id >= 0 &&
+			!has_id(part_ids, npart_ids, id)) {
+			part_ids[npart_ids++] = id;
+		}
+	}
+
+	if (npart_ids == 2) {
+		int ratio = part_to_number(&parts[part_ids[0]]) *
+			part_to_number(&parts[part_ids[1]]);
+		return ratio;
+	}
+
+	return 0;
 }
