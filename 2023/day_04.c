@@ -14,12 +14,24 @@ typedef struct {
 
 static inline void cards_parse(char* str, Cards* card);
 
+typedef struct {
+	int nmatches;
+	int n;
+	Cards winning;
+	Cards ours;
+} Scratch;
+
+#define MAX_SCRATCH 500
+
+static int nscratch;
+static Scratch cards[MAX_SCRATCH];
+
 int main() {
 
 	char buffer[512];
 	char* line;
 
-	size_t result = 0;
+	size_t result1 = 0;
 	while (line = fgets(buffer, sizeof(buffer), stdin), line != NULL) {
 		char* tok = strtok(line, ":|");
 		int card;
@@ -31,28 +43,51 @@ int main() {
 		tok = strtok(NULL, ":|");
 		char* o = strdup(tok);
 
-		Cards winning = { 0 };
-		cards_parse(w, &winning);
+		assert(nscratch + 1 < MAX_SCRATCH);
 
-		Cards our = { 0 };
-		cards_parse(o, &our);
+		Scratch* scratch = &cards[nscratch++];
+		scratch->nmatches = 0;
+		scratch->n = 1;
+		cards_parse(w, &scratch->winning);
+		cards_parse(o, &scratch->ours);
 
 		free(w);
 		free(o);
 
 		int points = 0;
 		int n = 0;
-		for (int i = 0; i < our.ncards; i++) {
-			for (int j = 0; j < winning.ncards; j++) {
-				if (our.cards[i] == winning.cards[j]) {
+		for (int i = 0; i < scratch->ours.ncards; i++) {
+			for (int j = 0; j < scratch->winning.ncards; j++) {
+				if (scratch->ours.cards[i] == scratch->winning.cards[j]) {
 					points = (int)pow(2, (double)n);
 					++n;
 				}
 			}
 		}
 
-		result += points;
+		result1 += points;
+		if (points)
+			scratch->nmatches = n;
 	}
+
+	for (int i = 0; i < nscratch; i++) {
+		const Scratch* scratch = &cards[i];
+
+		if (!scratch->n)
+			continue;
+
+		for (int j = 0; j < scratch->n; j++) {
+			for (int k = 0; k < scratch->nmatches; k++) {
+				int idx = i + 1 + k;
+				if (idx < nscratch)
+					++cards[idx].n;
+			}
+		}
+	}
+
+	size_t result2 = 0;
+	for (int i = 0; i < nscratch; i++)
+		result2 += cards[i].n;
 
 	return 0;
 }
