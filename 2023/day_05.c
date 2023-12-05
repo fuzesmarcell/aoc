@@ -60,7 +60,10 @@ end:
 	for (int i = 0; i < nseeds/2; i++) {
 		int64_t begin = seeds[i*2];
 		int64_t range = seeds[i*2+1];
-		for (int64_t rangeIdx = 0; rangeIdx < seeds[i+1]; rangeIdx++) {
+
+		int64_t rangeIdx;
+	#pragma omp parallel for
+		for (rangeIdx = 0; rangeIdx < range; rangeIdx++) {
 			int64_t value = begin + rangeIdx;
 			for (int j = 0; j < 7; j++) {
 				int conversion_count = 0;
@@ -89,6 +92,8 @@ end:
 				min = value;
 		}
 	}
+
+	printf("Result: %zu\n", min);
 
 	return 0;
 }
