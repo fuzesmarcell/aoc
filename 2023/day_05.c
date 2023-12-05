@@ -54,34 +54,40 @@ int main() {
 	}
 end:
 
-	int64_t min = INT64_MAX;
-	for (int i = 0; i < nseeds; i++) {
-		int64_t value = seeds[i];
-		for (int j = 0; j < 7; j++) {
-			int conversion_count = 0;
-			int64_t conv_value = -1;
-			for (int k = 0; k < map_sizes[j]; k++) {
-				int64_t dst = maps[j][k][0];
-				int64_t src = maps[j][k][1];
-				int64_t len = maps[j][k][2];
+	assert(nseeds % 2 == 0);
 
-				int64_t src_min = src;
-				int64_t src_max = src + len;
-				if (value >= src_min && value < src_max) {
-					conv_value = value + (dst - src);
-					++conversion_count;
+	int64_t min = INT64_MAX;
+	for (int i = 0; i < nseeds/2; i++) {
+		int64_t begin = seeds[i*2];
+		int64_t range = seeds[i*2+1];
+		for (int64_t rangeIdx = 0; rangeIdx < seeds[i+1]; rangeIdx++) {
+			int64_t value = begin + rangeIdx;
+			for (int j = 0; j < 7; j++) {
+				int conversion_count = 0;
+				int64_t conv_value = -1;
+				for (int k = 0; k < map_sizes[j]; k++) {
+					int64_t dst = maps[j][k][0];
+					int64_t src = maps[j][k][1];
+					int64_t len = maps[j][k][2];
+
+					int64_t src_min = src;
+					int64_t src_max = src + len;
+					if (value >= src_min && value < src_max) {
+						conv_value = value + (dst - src);
+						++conversion_count;
+					}
 				}
+
+				if (conv_value != -1)
+					value = conv_value;
+
+				assert(conversion_count == 0 ||
+					   conversion_count == 1);
 			}
 
-			if (conv_value != -1)
-				value = conv_value;
-
-			assert(conversion_count == 0 ||
-				   conversion_count == 1);
+			if (value < min)
+				min = value;
 		}
-
-		if (value < min)
-			min = value;
 	}
 
 	return 0;
