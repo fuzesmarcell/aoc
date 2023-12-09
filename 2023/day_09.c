@@ -52,15 +52,13 @@ int main() {
 		}
 	}
 
-	size_t result = 0;
+	int64_t result = 0;
 	for (int i = 0; i < num_histories; i++) {
 		int64_t n = 0;
 
 		History* h = &histories[i];
-		for (int i = h->ny - 2; i >= 0; i--) {
-			int j = (h->nx - h->ny)+((h->ny - 1)-i);
-			n += h->values[i][j];
-		}
+		for (int i = h->ny - 1; i >= 1; i--)
+			n = h->values[i-1][0] - n;
 
 		result += n;
 	}
