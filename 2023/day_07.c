@@ -8,6 +8,7 @@
 typedef enum {
 	CARD_NIL,
 
+	CARD_J,
 	CARD_2,
 	CARD_3,
 	CARD_4,
@@ -17,7 +18,6 @@ typedef enum {
 	CARD_8,
 	CARD_9,
 	CARD_T,
-	CARD_J,
 	CARD_Q,
 	CARD_K,
 	CARD_A,
@@ -36,6 +36,8 @@ typedef enum {
 	HAND_FULL_HOUSE,
 	HAND_FOUR_OF_A_KIND,
 	HAND_FIVE_OF_A_KIND,
+
+	HAND_COUNT,
 } HandType;
 
 typedef struct {
@@ -50,7 +52,8 @@ static Hand hands[MAX_HANDS];
 static int nhands;
 
 static CardType to_card(char c);
-static void determine_hand(Hand* h);
+static HandType determine_hand(const CardType hcards[5]);
+static HandType compute_joker_hand(HandType hand, const CardType cards[5]);
 
 int cmpfunc_type(const void* a, const void* b) {
 	const Hand* A = a;
@@ -87,7 +90,8 @@ int main() {
 		tok = strtok(NULL, " ");
 		h->bid = atoi(tok);
 
-		determine_hand(h);
+		h->type = determine_hand(&h->cards[0]);
+		h->type = compute_joker_hand(h->type, h->cards);
 	}
 
 	qsort(hands, nhands, sizeof(Hand), cmpfunc_type);
@@ -115,7 +119,7 @@ int main() {
 
 CardType to_card(char c) {
 	if (isdigit(c)) {
-		return (c - '2') + 1;
+		return (c - '2') + 2;
 	}
 
 	switch (c) {
@@ -130,13 +134,13 @@ CardType to_card(char c) {
 	return CARD_NIL;
 }
 
-void determine_hand(Hand* h) {
+HandType determine_hand(const CardType hcards[5]) {
 	//
 	// Pairs or x of a kind cards remain
 	//
 	int cards[CARD_COUNT] = { 0 };
 	for (int i = 0; i < 5; i++)
-		++cards[h->cards[i]];
+		++cards[hcards[i]];
 
 	int pairs = 0;
 	int triplets = 0;
@@ -159,36 +163,120 @@ void determine_hand(Hand* h) {
 	assert(pentas == 0 || pentas == 1);
 	assert(quads == 0 || quads == 1);
 
-	if (pentas) {
-		h->type = HAND_FIVE_OF_A_KIND;
-		return;
+	HandType type = HAND_NIL;
+	if (pentas)
+		type = HAND_FIVE_OF_A_KIND;
+	else if (quads)
+		type = HAND_FOUR_OF_A_KIND;
+	else if (triplets && pairs)
+		type = HAND_FULL_HOUSE;
+	else if (triplets)
+		type = HAND_THREE_OF_A_KIND;
+	else if (pairs == 2)
+		type = HAND_TWO_PAIR;
+	else if (pairs == 1)
+		type = HAND_ONE_PAIR;
+	else
+		type = HAND_HIGH_CARD;
+
+	return type;
+}
+
+HandType compute_joker_hand(HandType hand, const CardType cards[5]) {
+	CardType mcards[5];
+	mcards[0] = cards[0];
+	mcards[1] = cards[1];
+	mcards[2] = cards[2];
+	mcards[3] = cards[3];
+	mcards[4] = cards[4];
+
+	int num_jokers = 0;
+	for (int i = 0; i < 5; i++) {
+		if (mcards[i] == CARD_J)
+			++num_jokers;
 	}
 
-	if (quads) {
-		h->type = HAND_FOUR_OF_A_KIND;
-		return;
+	if (num_jokers == 1) {
+		int jp = -1;
+		for (jp = 0; jp < 5; jp++)
+			if (cards[jp] == CARD_J)
+				break;
+
+		assert(jp != -1);
+
+		for (int i = CARD_2; i < CARD_COUNT; i++) {
+			mcards[jp] = i;
+
+			HandType type = determine_hand(mcards);
+			if (type > hand)
+				hand = type;
+		}
+
+		return hand;
+	}
+	else if (num_jokers == 2) {
+		int njp = 0;
+		int jp[2] = { -1, -1 };
+
+		for (int i = 0; i < 5; i++) {
+			if (cards[i] == CARD_J) {
+				jp[njp++] = i;
+				if (njp == 2)
+					break;
+			}
+		}
+
+		assert(jp[0] != -1);
+		assert(jp[1] != -1);
+
+		for (int i = CARD_2; i < CARD_COUNT; i++) {
+			for (int j = CARD_2; j < CARD_COUNT; j++) {
+				mcards[jp[0]] = i;
+				mcards[jp[1]] = j;
+
+				HandType type = determine_hand(mcards);
+				if (type > hand)
+					hand = type;
+			}
+		}
+
+		return hand;
+	}
+	else if (num_jokers == 3) {
+		int njp = 0;
+		int jp[3] = { -1, -1, -1 };
+
+		for (int i = 0; i < 5; i++) {
+			if (cards[i] == CARD_J) {
+				jp[njp++] = i;
+				if (njp == 3)
+					break;
+			}
+		}
+
+		assert(jp[0] != -1);
+		assert(jp[1] != -1);
+		assert(jp[2] != -1);
+
+		for (int i = CARD_2; i < CARD_COUNT; i++) {
+			for (int j = CARD_2; j < CARD_COUNT; j++) {
+				for (int k = CARD_2; k < CARD_COUNT; k++) {
+					mcards[jp[0]] = i;
+					mcards[jp[1]] = j;
+					mcards[jp[2]] = k;
+
+					HandType type = determine_hand(mcards);
+					if (type > hand)
+						hand = type;
+				}
+			}
+		}
+
+		return hand;
+	}
+	else if (num_jokers == 4) {
+		return HAND_FIVE_OF_A_KIND;
 	}
 
-	if (triplets && pairs) {
-		h->type = HAND_FULL_HOUSE;
-		return;
-	}
-
-	if (triplets) {
-		h->type = HAND_THREE_OF_A_KIND;
-		return;
-	}
-
-	if (pairs == 2) {
-		h->type = HAND_TWO_PAIR;
-		return;
-	}
-
-	if (pairs == 1) {
-		h->type = HAND_ONE_PAIR;
-		return;
-	}
-
-	h->type = HAND_HIGH_CARD;
-	return;
+	return hand;
 }
