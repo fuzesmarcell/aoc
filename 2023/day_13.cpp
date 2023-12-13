@@ -4,12 +4,19 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <utility>
 
 struct Pattern {
 	int nx, ny;
 	std::vector<char> c;
 
 	const char& operator() (int row, int col) const {
+		assert(row >= 0 && row < ny);
+		assert(col >= 0 && col < nx);
+		return c[row*nx + col];
+	}
+
+	char& operator() (int row, int col) {
 		assert(row >= 0 && row < ny);
 		assert(col >= 0 && col < nx);
 		return c[row*nx + col];
@@ -36,16 +43,12 @@ struct Pattern {
 	}
 };
 
-int64_t fucking_h = 0;
-int64_t fucking_v = 0;
-
-static int FindReflection(const Pattern& pattern) {
-
-	std::vector<int> h_results;
-	std::vector<int> v_results;
-
+static int FindHorizontal(const Pattern& pattern, int row_to_ignore = -1) {
 	std::vector<int> hrows;
 	for (int i = 0; i < pattern.ny-1; i++) {
+		if (i == row_to_ignore)
+			continue;
+
 		if (pattern.RowEq(i, i+1)) {
 			hrows.push_back(i);
 		}
@@ -69,14 +72,20 @@ static int FindReflection(const Pattern& pattern) {
 			};
 
 			if (IsMirrored(hrow)) {
-				fucking_h += (int64_t)hrow+1;
-				return 0;
+				return hrow;
 			}
 		}
 	}
 
+	return -1;
+}
+
+static int FindVertical(const Pattern& pattern, int col_to_ignore = -1) {
 	std::vector<int> vcols;
 	for (int i = 0; i < pattern.nx-1; i++) {
+		if (col_to_ignore == i)
+			continue;
+
 		if (pattern.ColEq(i, i+1)) {
 			vcols.push_back(i);
 		}
@@ -100,20 +109,16 @@ static int FindReflection(const Pattern& pattern) {
 			};
 
 			if (IsMirrored(vcol)) {
-				fucking_v += (int64_t)vcol+1;
-				return 0;
+				return vcol;
 			}
 		}
 	}
 
-	assert(v_results.size() == 0 || v_results.size() == 1);
-	assert(h_results.size() == 0 || h_results.size() == 1);
+	return -1;
+}
 
-	printf("V: %zu\n", v_results.size());
-	printf("H: %zu\n", h_results.size());
-	printf("---\n");
-
-	return 0;
+static std::pair<int, int> FindReflection(const Pattern& pattern, int v = -1, int h = -1) {
+	return { FindVertical(pattern, v), FindHorizontal(pattern, h) };
 }
 
 int main() {
@@ -137,11 +142,45 @@ int main() {
 		++pattern.ny;
 	}
 
+	int nv = 0;
+	int nh = 0;
 	for (const auto& pattern : patterns) {
-		FindReflection(pattern);
+
+		auto [vi, hi] = FindReflection(pattern);
+
+		Pattern new_pattern = pattern;
+		for (int row = 0; row < new_pattern.ny; row++) {
+			for (int col = 0; col < new_pattern.nx; col++) {
+				char& v = new_pattern(row, col);
+				if (v == '#') {
+					v = '.';
+				}
+				else {
+					v = '#';
+				}
+
+				auto [nnv, nnh] = FindReflection(new_pattern, vi, hi);
+				if (nnv >= 0) {
+					nv += nnv+1;
+					goto done;
+				}
+				if (nnh >= 0) {
+					nh += nnh+1;
+					goto done;
+				}
+
+				if (v == '#') {
+					v = '.';
+				}
+				else {
+					v = '#';
+				}
+			}
+		}
+	done:;
 	}
 
-	int64_t result = fucking_v + 100*fucking_h;
+	int64_t result = (int64_t)nv + (int64_t)100*nh;
 
 	return 0;
 }
